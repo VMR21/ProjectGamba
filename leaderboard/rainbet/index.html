@@ -446,22 +446,19 @@ function updateCountdown() {
   const el = document.getElementById("countdown");
   const now = new Date();
 
-  // Set fixed target date: 14 June 2025 at 00:00:00 UTC
-  const target = new Date(Date.UTC(2025, 4, 17, 0, 0, 0)); // Month is 0-indexed: 5 = June
-
+  const target = new Date(Date.UTC(2025, 5, 14, 0, 0, 0)); // June = 5 (0-indexed)
   const diff = target - now;
+
   if (diff <= 0) return el.textContent = "Ended";
 
   const d = Math.floor(diff / (1000 * 60 * 60 * 24));
   const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
   const m = Math.floor((diff / (1000 * 60)) % 60);
   const s = Math.floor((diff / 1000) % 60);
-  el.textContent = ${d}d ${h}h ${m}m ${s}s;
+  el.textContent = `${d}d ${h}h ${m}m ${s}s`;
 }
-
 setInterval(updateCountdown, 1000);
 updateCountdown();
-
 
 async function loadLeaderboard() {
   const res = await fetch(API_URL);
@@ -472,8 +469,8 @@ async function loadLeaderboard() {
 
   data.forEach((entry, index) => {
     const place = index + 1;
-    const reward = index < rewards.length ? $ ${rewards[index]} : '$ 0';
-    const wagered = $ ${Number(entry.wagered).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })};
+    const reward = index < rewards.length ? `$ ${rewards[index]}` : '$ 0';
+    const wagered = `$ ${Number(entry.wagered).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const username = entry.username;
 
     if (index < 3) {
@@ -481,24 +478,22 @@ async function loadLeaderboard() {
       card.className = 'css-jehefp';
       card.style.boxShadow = top3Glows[index];
       card.style.position = 'relative';
-      if (index === 1) {
-          card.style.transformOrigin = 'center center';
-          card.style.transform = 'translateY(25px) scale(1.2)';
-      }
+      if (index === 1) card.style.transform = 'translateY(25px) scale(1.2)';
       if (index === 2) card.style.transform = 'translateY(25px)';
-      card.innerHTML = 
+      card.innerHTML = `
         <img src="${roobetLogo}" style="width: 96px; height: auto; border-radius: 12px;">
         <div class="css-hca0vm"><span class="css-15a1lq3" style="font-weight:bold;">${username}</span></div>
         <div class="css-7ahevu ejrykqo0"><span class="css-1vqddgv">Wagered: </span>
           <span class="css-18icuxn"><div class="css-1y0ox2o"><span class="css-114dvlx">${wagered}</span></div></span>
         </div>
-        <span class="css-v4675v"><div class="css-1y0ox2o"><span class="css-114dvlx glow">${reward}</span></div></span>;
+        <span class="css-v4675v"><div class="css-1y0ox2o"><span class="css-114dvlx glow">${reward}</span></div></span>
+      `;
       top3Container.appendChild(card);
     } else {
       const row = document.createElement('div');
       row.className = 'row list row-cols-5';
       row.setAttribute('data-v-1d580398', '');
-      row.innerHTML = 
+      row.innerHTML = `
         <div class="hide-mobile col-2"><b style="font-size: 18px;">#${place}</b></div>
         <div class="col-5">
           <img src="${roobetLogo}" width="22" style="margin-right: 8px;">
@@ -509,7 +504,8 @@ async function loadLeaderboard() {
         </div>
         <div class="col-3">
           <div class="price-wrapper" style="color: #FFF; font-weight:bold; font-size: 15px;">${wagered}</div>
-        </div>;
+        </div>
+      `;
       rowsContainer.appendChild(row);
     }
   });
