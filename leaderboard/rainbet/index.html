@@ -437,37 +437,27 @@
 <script>
 const API_URL = 'https://projectgambadata.onrender.com/leaderboard/top14';
 const roobetLogo = '/assets/rainbetlogo.png';
-const rewards = [50, 100, 25, 12.5, 12.5]; // Only first 10 rewarded
+const rewards = [50, 100, 25, 12.5, 12.5];
 const top3Glows = ['0 0 40px #C0C0C0', '0 0 40px #FFD700', '0 0 40px #CD7F32'];
 
-// Countdown logic
 function updateCountdown() {
   const el = document.getElementById("countdown");
   const now = new Date();
-
-  // 14 June 2025 at 00:00 UTC
-  const target = new Date(Date.UTC(2025, 4, 17, 0, 0, 0)); // Month = 5 for June
+  const target = new Date(Date.UTC(2025, 4, 17, 0, 0, 0));
   const diff = target - now;
-
-  if (diff <= 0) {
-    el.textContent = "Ended";
-    return;
-  }
-
+  if (diff <= 0) return el.textContent = "Ended";
   const d = Math.floor(diff / (1000 * 60 * 60 * 24));
   const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
   const m = Math.floor((diff / (1000 * 60)) % 60);
   const s = Math.floor((diff / 1000) % 60);
   el.textContent = `${d}d ${h}h ${m}m ${s}s`;
 }
-
 setInterval(updateCountdown, 1000);
 updateCountdown();
 
 async function loadLeaderboard() {
   const res = await fetch(API_URL);
   const data = await res.json();
-
   const top3Container = document.querySelector(".css-gqrafh");
   const rowsContainer = document.getElementById("leaderboard-rows");
 
@@ -482,10 +472,7 @@ async function loadLeaderboard() {
       card.className = 'css-jehefp';
       card.style.boxShadow = top3Glows[index];
       card.style.position = 'relative';
-      if (index === 1) {
-        card.style.transformOrigin = 'center center';
-        card.style.transform = 'translateY(25px) scale(1.2)';
-      }
+      if (index === 1) card.style.transform = 'translateY(25px) scale(1.2)';
       if (index === 2) card.style.transform = 'translateY(25px)';
       card.innerHTML = `
         <img src="${roobetLogo}" style="width: 96px; height: auto; border-radius: 12px;">
