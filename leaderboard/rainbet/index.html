@@ -443,7 +443,7 @@ const top3Glows = ['0 0 40px #C0C0C0', '0 0 40px #FFD700', '0 0 40px #CD7F32'];
 function updateCountdown() {
   const el = document.getElementById("countdown");
   const now = new Date();
-  const target = new Date(Date.UTC(2025, 4, 17, 0, 0, 0));
+  const target = new Date(Date.UTC(2025, 5, 17, 0, 0, 0));
   const diff = target - now;
   if (diff <= 0) return el.textContent = "Ended";
   const d = Math.floor(diff / (1000 * 60 * 60 * 24));
