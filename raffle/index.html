@@ -15,6 +15,14 @@
     <link rel="stylesheet" type="text/css" href="/css/toast.css">
     <style>
         /* Your existing custom styles go here */
+        body {
+            /* Adding a subtle background pattern or gradient for a "cool" effect */
+            background: #111827; /* Dark background fallback */
+            background-image: radial-gradient(circle at top left, rgba(63, 81, 181, 0.1), transparent 50%),
+                              radial-gradient(circle at bottom right, rgba(255, 87, 34, 0.08), transparent 50%);
+            background-attachment: fixed; /* Ensures background stays in place on scroll */
+        }
+
         .warning-message {
             width: 90%;
             max-width: 500px;
@@ -238,10 +246,14 @@
             width: 100%;
             margin: 0 auto;
             padding: 20px;
-            background-color: #1a202c;
+            /* Transparent background with a subtle blur effect */
+            background-color: rgba(26, 32, 44, 0.7); /* Slightly transparent dark background */
+            backdrop-filter: blur(5px); /* Frosted glass effect */
+            -webkit-backdrop-filter: blur(5px); /* For Safari */
             border-radius: 12px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
             color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border for transparency */
         }
 
         .raffle-container h1,
@@ -275,7 +287,7 @@
             padding: 12px;
             border-radius: 8px;
             border: 1px solid #4a5568;
-            background-color: #2d3748;
+            background-color: rgba(45, 55, 72, 0.8); /* Transparent input background */
             color: #e2e8f0;
             font-size: 1rem;
             outline: none;
@@ -307,7 +319,7 @@
         }
 
         #results {
-            background-color: #2d3748;
+            background-color: rgba(45, 55, 72, 0.8); /* Transparent results background */
             padding: 15px;
             border-radius: 8px;
             text-align: center;
@@ -320,6 +332,7 @@
             justify-content: center;
             margin-bottom: 25px;
             width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
         }
 
         #ticketContainer {
@@ -328,18 +341,19 @@
             gap: 10px;
             justify-content: center;
             margin-top: 20px;
-            background-color: #2d3748;
+            background-color: rgba(45, 55, 72, 0.6); /* Transparent ticket container background */
             padding: 20px;
             border-radius: 12px;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
             width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.05); /* Subtle border */
         }
 
         #ticketContainer>div {
             padding: 10px;
-            border: 1px solid #4a5568;
+            border: 1px solid rgba(74, 85, 104, 0.5); /* Transparent border */
             border-radius: 8px;
-            background: #4a5568;
+            background: rgba(74, 85, 104, 0.7); /* Transparent card background */
             min-width: 100px;
             color: #e2e8f0;
             font-size: 0.9rem;
@@ -348,12 +362,12 @@
             flex-basis: calc(20% - 10px);
             box-sizing: border-box;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: transform 0.1s ease-in-out;
+            transition: transform 0.1s ease-in-out, background 0.2s ease;
         }
 
         #ticketContainer>div:hover {
             transform: translateY(-2px);
-            background: #5a67d8;
+            background: rgba(90, 103, 216, 0.8); /* Highlight on hover with transparency */
         }
 
         #loadMore {
@@ -370,6 +384,40 @@
 
         #loadMore:hover {
             background-color: #3182ce;
+        }
+
+        /* New button for live stream announcement */
+        .live-stream-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #ff416c, #ff4b2b); /* Vibrant gradient */
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 10px;
+            text-decoration: none;
+            box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            text-align: center;
+            flex-wrap: wrap; /* Allow text to wrap on small screens */
+        }
+
+        .live-stream-button:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(255, 65, 108, 0.6);
+            background: linear-gradient(45deg, #ff4b2b, #ff416c); /* Reverse gradient on hover */
+        }
+
+        .live-stream-button svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor; /* Use button's text color for icon */
         }
     </style>
 </head>
@@ -433,6 +481,13 @@
         <div id="countdown" class="text-2xl font-semibold mb-8 p-4 bg-gray-800 rounded-lg shadow-md">
             Loading countdown...
         </div>
+
+        <a href="https://kick.com/projectgamba" target="_blank" class="live-stream-button">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+            Claim $25 to 2 winners on live stream!
+        </a>
 
         <div class="raffle-search-section">
             <div class="raffle-input-group">
@@ -531,15 +586,6 @@
         </div>
     </div>
 
-    <!-- Removed Cloudflare analytics script as it was causing an 'Invalid URL' error.
-         This script is external to the core raffle functionality. -->
-    <!--
-    <script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015"
-        xintegrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ=="
-        data-cf-beacon='{"rayId":"93f624c93c488202","version":"2025.4.0-1-g37f21b1","r":1,"token":"6a289e34095c4e319f5a765107c772ad","serverTiming":{"name":{"cfExtPri":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}}}'
-        crossorigin="anonymous"></script>
-    -->
-
     <script>
         // Modal script (Leaderboard Rules renamed to Raffle Rules)
         var modal = document.getElementById("rulesModal");
@@ -629,7 +675,7 @@
 
             slice.forEach(t => {
                 const div = document.createElement('div');
-                div.style = 'padding: 10px; border: 1px solid #4a5568; border-radius: 8px; background: #4a5568; min-width: 100px; color: #e2e8f0; font-size: 0.9rem; font-weight: 600; text-align: center; flex-basis: calc(20% - 10px); box-sizing: border-box; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: transform 0.1s ease-in-out;';
+                div.style = 'padding: 10px; border: 1px solid rgba(74, 85, 104, 0.5); border-radius: 8px; background: rgba(74, 85, 104, 0.7); min-width: 100px; color: #e2e8f0; font-size: 0.9rem; font-weight: 600; text-align: center; flex-basis: calc(20% - 10px); box-sizing: border-box; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: transform 0.1s ease-in-out, background 0.2s ease;';
                 div.textContent = `#${t.ticket} - ${t.username}`;
                 container.appendChild(div);
             });
