@@ -472,17 +472,19 @@
             Every $100 wager gets you 1 ticket. Updated live.
         </p>
 
-        <div id="countdown" class="text-2xl font-semibold mb-8 p-4 bg-gray-800 rounded-lg shadow-md">
+<div id="countdown" class="text-2xl font-semibold mb-8 p-4 bg-gray-800 rounded-lg shadow-md">
             Loading countdown...
         </div>
 
+        <div id="totalTicketsDisplay" class="text-xl font-semibold mb-6 p-3 bg-gray-700 rounded-lg shadow-md" style="color: #ffffff; text-align: center; width: 100%;">
+            Total Tickets: Loading...
+        </div>
         <a href="https://kick.com/projectgamba" target="_blank" class="live-stream-button">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
             </svg>
             Claim $25 to 2 winners on live stream! Every Saturday Via this Raffle!
         </a>
-
         <div class="raffle-search-section">
             <div class="raffle-input-group">
                 <input type="text" id="searchUser" placeholder="Search by username...">
@@ -623,7 +625,9 @@
         const API = 'https://projectgambaraffle.onrender.com/raffle/tickets'; // Raffle API
         let tickets = []; // Array to store all fetched tickets
         let currentIndex = 0; // Tracks the current index for displaying tickets
-        const step = 10; // Number of tickets to display per load
+        const step = 10; // Number of tickets to display per 
+
+        // ... (previous JavaScript content) ...
 
         /**
          * Fetches tickets from the API and initializes the display.
@@ -638,18 +642,31 @@
                 // Sort tickets by ticket number to ensure consistent display
                 tickets.sort((a, b) => a.ticket - b.ticket);
                 displayTickets(); // Display the initial set of tickets
+
+                // NEW: Update Total Tickets display
+                const totalTicketsDisplay = document.getElementById('totalTicketsDisplay');
+                if (totalTicketsDisplay) {
+                    totalTicketsDisplay.textContent = `Total Tickets: ${tickets.length}`;
+                }
+                // END NEW
+
             } catch (error) {
                 console.error("Failed to fetch tickets:", error);
                 const resultsDiv = document.getElementById('results');
                 if (resultsDiv) { // Ensure resultsDiv exists before trying to update it
                     resultsDiv.textContent = "Error loading tickets. Please try again later.";
                 }
+                // NEW: Also update total tickets display on error
+                const totalTicketsDisplay = document.getElementById('totalTicketsDisplay');
+                if (totalTicketsDisplay) {
+                    totalTicketsDisplay.textContent = "Total Tickets: N/A (Error loading)";
+                }
+                // END NEW
             }
         }
 
-        /**
-         * Displays a batch of tickets in the ticketContainer.
-         */
+// ... (rest of the JavaScript content) ...
+        
         function displayTickets() {
             const container = document.getElementById('ticketContainer');
             const loadMoreButton = document.getElementById('loadMore');
