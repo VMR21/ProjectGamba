@@ -281,7 +281,7 @@
             <div data-v-1d580398="" class="row text">
                 <span data-v-1d580398="" class="title">
                     <div data-v-1d580398="" class="price-wrapper glow">
-                        $ 1,000
+                        $ 500
                     </div> MONTHLY CODE <span class="glow">ProjectGamba</span> Leaderboard!
                 </span>
                 <span data-v-1d580398="" class="subtitle" style="color: #FFF;">Every <b>BET</b> on Rainbet under Code
@@ -437,23 +437,41 @@
 <script>
 const API_URL = 'https://projectgambadata.onrender.com/leaderboard/top14';
 const roobetLogo = '/assets/rainbetlogo.png';
-const rewards = [150, 500, 100, 70, 50, 40, 30, 25, 20, 15];
+const rewards = [100, 200, 60, 40, 30, 25, 15, 10, 10, 10];
 const top3Glows = ['0 0 40px #C0C0C0', '0 0 40px #FFD700', '0 0 40px #CD7F32'];
 
 function updateCountdown() {
   const el = document.getElementById("countdown");
   const now = new Date();
-  const target = new Date(Date.UTC(2025, 5, 17, 0, 0, 0));
+
+  let year = now.getUTCFullYear();
+  let month = now.getUTCMonth(); // 0-based
+  let target = new Date(Date.UTC(year, month, 16, 23, 59, 59));
+
+  // If current time is past this month's 16th 23:59:59 UTC, move to next month
+  if (now >= target) {
+    if (month === 11) {
+      year += 1;
+      month = 0;
+    } else {
+      month += 1;
+    }
+    target = new Date(Date.UTC(year, month, 16, 23, 59, 59));
+  }
+
   const diff = target - now;
-  if (diff <= 0) return el.textContent = "Ended";
+
   const d = Math.floor(diff / (1000 * 60 * 60 * 24));
   const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
   const m = Math.floor((diff / (1000 * 60)) % 60);
   const s = Math.floor((diff / 1000) % 60);
+
   el.textContent = `${d}d ${h}h ${m}m ${s}s`;
 }
+
 setInterval(updateCountdown, 1000);
 updateCountdown();
+
 
 async function loadLeaderboard() {
   const res = await fetch(API_URL);
