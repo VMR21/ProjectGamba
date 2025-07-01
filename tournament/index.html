@@ -16,6 +16,105 @@
 </style>
 
 </head>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+  import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
+
+  // ✅ Your Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyAzQsBXjxI3017nUxvwf3aUaUQPbtfrCx8",
+    authDomain: "projectgambabracket.firebaseapp.com",
+    databaseURL: "https://projectgambabracket-default-rtdb.firebaseio.com",
+    projectId: "projectgambabracket",
+    storageBucket: "projectgambabracket.firebasestorage.app",
+    messagingSenderId: "721165844638",
+    appId: "1:721165844638:web:b555a6146bb5181056fb8f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  const MASTER_KEY = "rTP3aL89xKwD29meFq0c"; // 🔐 Boss key (replace if needed)
+  let isBoss = false;
+
+  // 👁 Secure password input popup
+  const overlay = document.createElement("div");
+  overlay.style = `
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); z-index: 9999; display: flex;
+    justify-content: center; align-items: center; color: white; flex-direction: column;
+  `;
+  overlay.innerHTML = `
+    <div style="text-align: center;">
+      <h2 style="margin-bottom: 10px;">Enter Access Key</h2>
+      <input type="password" id="keyInput" placeholder="20-char secret key"
+        style="padding: 10px; width: 300px; font-size: 1.1em; border-radius: 6px; border: none; text-align: center;">
+      <br><br>
+      <button id="keySubmit" style="padding: 10px 20px; font-size: 1em; border-radius: 6px; background: #00e0ff; color: black; border: none; cursor: pointer;">Submit</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  document.getElementById("keySubmit").onclick = () => {
+    const inputKey = document.getElementById("keyInput").value.trim();
+    if (inputKey === MASTER_KEY) {
+      isBoss = true;
+    }
+    document.body.removeChild(overlay);
+    initBracket();
+  };
+
+  function initBracket() {
+    // 🔁 Reset Button for boss
+    if (isBoss) {
+      const resetBtn = document.createElement("button");
+      resetBtn.textContent = "Reset All";
+      resetBtn.style.cssText = `
+        position: fixed; bottom: 30px; right: 30px; background: red;
+        color: white; font-weight: bold; padding: 10px 20px;
+        border: none; border-radius: 8px; cursor: pointer; z-index: 9999;
+      `;
+      resetBtn.onclick = () => {
+        if (confirm("Reset all bracket data?")) {
+          remove(ref(db, "matches")).then(() => location.reload());
+        }
+      };
+      document.body.appendChild(resetBtn);
+    }
+
+    // 🧠 Update local UI from Firebase
+    onValue(ref(db, 'matches'), (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
+      for (const matchId in data) {
+        const matchData = data[matchId];
+        for (const playerKey in matchData) {
+          const playerId = playerKey.replace("player", "");
+          const nameInput = document.querySelector(`#${matchId} .player-input[data-player-id="${playerId}"]`);
+          const multInput = document.querySelector(`#${matchId} .multiplier-input[data-player-id="${playerId}"]`);
+          if (matchData[playerKey].name !== undefined && nameInput) nameInput.value = matchData[playerKey].name;
+          if (matchData[playerKey].multiplier !== undefined && multInput) multInput.value = matchData[playerKey].multiplier;
+        }
+      }
+    });
+
+    // 📝 Save input to Firebase if boss
+    if (isBoss) {
+      document.addEventListener('input', (e) => {
+        const input = e.target;
+        if (!input.classList.contains('player-input') && !input.classList.contains('multiplier-input')) return;
+        const match = input.closest('.match');
+        const matchId = match.id;
+        const playerId = input.dataset.playerId;
+        const field = input.classList.contains('player-input') ? 'name' : 'multiplier';
+        set(ref(db, `matches/${matchId}/player${playerId}/${field}`), input.value);
+      });
+    } else {
+      document.querySelectorAll('.player-input, .multiplier-input').forEach(input => input.disabled = true);
+    }
+  }
+</script>
+
 <body>
     <div class="background-animation"></div>
 
