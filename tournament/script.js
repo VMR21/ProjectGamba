@@ -61,28 +61,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const m1 = parseFloat(p1Mult.value);
             const m2 = parseFloat(p2Mult.value);
-            let winnerName = '';
+            let winnerName = (m1 >= m2) ? p1Name.value : p2Name.value;
 
-            if (m1 > m2 || m1 === m2) {
-                winnerName = p1Name.value;
-            } else {
-                winnerName = p2Name.value;
-            }
+            const nextMatchMap = {
+                "match-R1A": { nextMatch: "match-R2A", playerId: "1" },
+                "match-R1B": { nextMatch: "match-R2A", playerId: "2" },
+                "match-R1C": { nextMatch: "match-R2B", playerId: "1" },
+                "match-R1D": { nextMatch: "match-R2B", playerId: "2" },
+                "match-R2A": { nextMatch: "match-R3A", playerId: "1" },
+                "match-R2B": { nextMatch: "match-R3A", playerId: "2" },
+                "match-R3A": { nextMatch: "match-Winner", playerId: "1" }
+            };
 
-            if (matchId === 'match-R1A') {
-                document.querySelector('input[placeholder="Winner R1A/B"][data-player-id="1"]').value = winnerName;
-            } else if (matchId === 'match-R1B') {
-                document.querySelector('input[placeholder="Winner R1A/B"][data-player-id="2"]').value = winnerName;
-            } else if (matchId === 'match-R1C') {
-                document.querySelector('input[placeholder="Winner R1C/D"][data-player-id="1"]').value = winnerName;
-            } else if (matchId === 'match-R1D') {
-                document.querySelector('input[placeholder="Winner R1C/D"][data-player-id="2"]').value = winnerName;
-            } else if (matchId === 'match-R2A') {
-                document.querySelector('input[placeholder="Winner R2A/B"][data-player-id="1"]').value = winnerName;
-            } else if (matchId === 'match-R2B') {
-                document.querySelector('input[placeholder="Winner R2A/B"][data-player-id="2"]').value = winnerName;
-            } else if (matchId === 'match-R3A') {
-                document.querySelector('input.final-winner-input[placeholder="Tournament Champion"]').value = winnerName;
+            const next = nextMatchMap[matchId];
+            if (next) {
+                const { nextMatch, playerId } = next;
+                const nameSelector = nextMatch === "match-Winner"
+                    ? `#${nextMatch} .final-winner-input`
+                    : `#${nextMatch} .player-input[data-player-id="${playerId}"]`;
+
+                const inputName = document.querySelector(nameSelector);
+                if (inputName) inputName.value = winnerName;
+
+                // ✅ Save to Firebase
+                import("https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js").then(({ getDatabase, ref, set }) => {
+                    const db = getDatabase();
+                    const path = `matches/${nextMatch}/player${playerId}/name`;
+                    set(ref(db, path), winnerName);
+                });
             }
 
             match.querySelectorAll('input').forEach(input => {
