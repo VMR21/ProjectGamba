@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guess 1–100</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
+  <div class="w-full max-w-3xl">
+    <div class="bg-slate-900/70 backdrop-blur rounded-2xl shadow-2xl border border-slate-800 overflow-hidden">
+      <div class="p-6 sm:p-8">
+        <header class="flex items-center justify-between gap-4">
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">🎯 Guess the Number (1–100)</h1>
+          <span id="gameStatus" class="text-xs sm:text-sm px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-600/30">Active</span>
+        </header>
+
+        <!-- Winner banner -->
+        <div id="winnerBanner" class="hidden mt-6 p-4 rounded-xl border bg-gradient-to-br from-amber-500/10 to-emerald-500/10 border-amber-400/30 text-amber-200">
+          <p class="text-lg font-semibold">🏆 Winner: <span id="winnerName" class="font-bold"></span></p>
+          <p class="text-sm opacity-80">Correct guess: <span id="winnerGuess"></span> • <span id="winnerTime"></span></p>
+        </div>
+
+        <!-- Admin controls -->
+        <section class="mt-6">
+          <details class="group">
+            <summary class="cursor-pointer select-none flex items-center justify-between gap-2 p-3 rounded-lg bg-slate-800/60 border border-slate-700 hover:bg-slate-800">
+              <div class="font-semibold">🛠️ Admin Panel</div>
+              <div class="text-xs opacity-70">(Set target + reset)</div>
+            </summary>
+            <div class="mt-4 grid gap-3 sm:grid-cols-3">
+              <input id="adminPin" type="password" placeholder="Admin PIN" class="col-span-1 sm:col-span-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 focus:outline-none focus:ring focus:ring-emerald-600/30" />
+              <input id="targetInput" type="number" min="1" max="100" placeholder="Target (1–100)" class="col-span-1 sm:col-span-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 focus:outline-none focus:ring focus:ring-emerald-600/30" />
+              <button id="setTargetBtn" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-semibold">Set Target</button>
+              <button id="resetBtn" class="sm:col-span-3 px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 font-semibold">Reset Game</button>
+              <p class="sm:col-span-3 text-xs opacity-70">Tip: Keep the PIN secret. This page is static; PIN is only checked client-side for convenience. For higher security, use Firebase Auth + rules.</p>
+            </div>
+          </details>
+        </section>
+
+        <!-- Player form -->
+        <section class="mt-8">
+          <div class="grid gap-3 sm:grid-cols-3">
+            <input id="nameInput" type="text" maxlength="24" placeholder="Your display name" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 focus:outline-none focus:ring focus:ring-emerald-600/30" />
+            <input id="guessInput" type="number" min="1" max="100" placeholder="Your guess (1–100)" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 focus:outline-none focus:ring focus:ring-emerald-600/30" />
+            <button id="guessBtn" class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold">Submit Guess</button>
+          </div>
+          <p class="mt-2 text-xs opacity-70">First correct guess wins. Everyone can see the winner instantly.</p>
+        </section>
+
+        <!-- Recent guesses -->
+        <section class="mt-8">
+          <h2 class="text-lg font-semibold mb-3">📜 Recent guesses</h2>
+          <div id="guessesList" class="grid gap-2"></div>
+        </section>
+      </div>
+      <footer class="px-6 sm:px-8 py-4 bg-slate-900/50 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+        <span id="roomIdLabel">Room: default</span>
+        <span id="onlineCount">👥 0 online</span>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Firebase (v10 modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getDatabase, ref, onValue, set, push, runTransaction, get, child, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDrolpjH-m8geVI2MUt3VHM-J9bGh5KrWk",
+      authDomain: "gamba-93cf6.firebaseapp.com",
+      databaseURL: "https://gamba-93cf6-default-rtdb.firebaseio.com",
+      projectId: "gamba-93cf6",
+      storageBucket: "gamba-93cf6.appspot.com",
+      messagingSenderId: "731013265575",
+      appId: "1:731013265575:web:1bed475f69476d97554382",
+      measurementId: "G-8D1GV4DDMX"
+    };
+
+    const ROOM_ID = new URL(location.href).searchParams.get('room') || 'default';
+    const ADMIN_PIN = '772177';
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const presenceRef = ref(db, `rooms/${ROOM_ID}/presence/${crypto.randomUUID()}`);
+    set(presenceRef, true);
+    onDisconnect(presenceRef).remove();
+    onValue(ref(db, `rooms/${ROOM_ID}/presence`), (snap) => {
+      const val = snap.val() || {}; 
+      document.getElementById('onlineCount').textContent = `👥 ${Object.keys(val).length} online`;
+    });
+
+    const roomIdLabel = document.getElementById('roomIdLabel');
+    roomIdLabel.textContent = `Room: ${ROOM_ID}`;
+
+    const nameInput = document.getElementById('nameInput');
+    const guessInput = document.getElementById('guessInput');
+    const guessBtn = document.getElementById('guessBtn');
+    const guessesList = document.getElementById('guessesList');
+    const winnerBanner = document.getElementById('winnerBanner');
+    const winnerName = document.getElementById('winnerName');
+    const winnerGuess = document.getElementById('winnerGuess');
+    const winnerTime = document.getElementById('winnerTime');
+    const statusPill = document.getElementById('gameStatus');
+
+    const adminPin = document.getElementById('adminPin');
+    const targetInput = document.getElementById('targetInput');
+    const setTargetBtn = document.getElementById('setTargetBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    onValue(ref(db, `rooms/${ROOM_ID}/game/winner`), (snap) => {
+      const data = snap.val();
+      if (data) {
+        winnerBanner.classList.remove('hidden');
+        winnerName.textContent = data.name;
+        winnerGuess.textContent = data.guess;
+        const t = data.ts ? new Date(data.ts).toLocaleString() : '—';
+        winnerTime.textContent = t;
+        statusPill.textContent = 'Ended';
+        statusPill.className = 'text-xs sm:text-sm px-2 py-1 rounded-full bg-rose-500/10 text-rose-300 border border-rose-600/30';
+        guessBtn.disabled = true;
+        guessInput.disabled = true;
+      } else {
+        winnerBanner.classList.add('hidden');
+        statusPill.textContent = 'Active';
+        statusPill.className = 'text-xs sm:text-sm px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-600/30';
+        guessBtn.disabled = false;
+        guessInput.disabled = false;
+      }
+    });
+
+    onValue(ref(db, `rooms/${ROOM_ID}/guesses`), (snap) => {
+      const val = snap.val() || {};
+      const items = Object.values(val)
+        .sort((a,b) => (b.ts || 0) - (a.ts || 0))
+        .slice(0, 20);
+      guessesList.innerHTML = '';
+      for (const g of items) {
+        const row = document.createElement('div');
+        row.className = 'grid grid-cols-3 gap-2 p-2 rounded-lg border border-slate-800 bg-slate-900/40';
+        row.innerHTML = `
+          <span class="truncate">👤 ${escapeHtml(g.name || 'Anon')}</span>
+          <span class="text-center">🔢 ${g.guess}</span>
+          <span class="text-right opacity-70">${g.ts ? new Date(g.ts).toLocaleTimeString() : ''}</span>
+        `;
+        guessesList.appendChild(row);
+      }
+    });
+
+    guessBtn.addEventListener('click', async () => {
+      const name = (nameInput.value || '').trim().slice(0,24) || 'Anon';
+      const guess = Number(guessInput.value);
+      if (!Number.isInteger(guess) || guess < 1 || guess > 100) {
+        return toast('Enter a whole number 1–100');
+      }
+
+      if (!canGuess()) return toast('Slow down a bit…');
+
+      const roomRef = ref(db, `rooms/${ROOM_ID}`);
+      const targetSnap = await get(child(roomRef, 'game/target'));
+      const target = targetSnap.val();
+
+      await push(child(roomRef, 'guesses'), { name, guess, ts: Date.now() });
+
+      if (target == null) {
+        toast('Game not configured yet. (Admin must set target)');
+        return;
+      }
+
+      if (Number(guess) === Number(target)) {
+        await runTransaction(child(roomRef, 'game/winner'), (curr) => {
+          if (curr) return;
+          return { name, guess, ts: Date.now() };
+        });
+      }
+
+      guessInput.value = '';
+    });
+
+    setTargetBtn.addEventListener('click', async () => {
+      const pinOk = (adminPin.value || '') === ADMIN_PIN;
+      const target = Number(targetInput.value);
+      if (!pinOk) return toast('Wrong PIN');
+      if (!Number.isInteger(target) || target < 1 || target > 100) return toast('Target must be 1–100');
+      await set(ref(db, `rooms/${ROOM_ID}/game/target`), target);
+      await set(ref(db, `rooms/${ROOM_ID}/game/winner`), null);
+      toast('Target saved. Game is live!');
+    });
+
+    resetBtn.addEventListener('click', async () => {
+      const pinOk = (adminPin.value || '') === ADMIN_PIN;
+      if (!pinOk) return toast('Wrong PIN');
+      await set(ref(db, `rooms/${ROOM_ID}/guesses`), null);
+      await set(ref(db, `rooms/${ROOM_ID}/game/winner`), null);
+      toast('Game reset.');
+    });
+
+    function canGuess() {
+      const key = `lastGuess_${ROOM_ID}`;
+      const last = Number(localStorage.getItem(key) || 0);
+      const now = Date.now();
+      if (now - last < 2000) return false;
+      localStorage.setItem(key, String(now));
+      return true;
+    }
+
+    function toast(msg) {
+      const el = document.createElement('div');
+      el.textContent = msg;
+      el.className = 'fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-sm shadow-lg';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2000);
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>\"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[s]));
+    }
+
+  </script>
+</body>
+</html>
