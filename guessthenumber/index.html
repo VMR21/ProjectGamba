@@ -13,18 +13,6 @@
   </style>
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
-  <!-- Username overlay -->
-  <div id="usernameOverlay" class="fixed inset-0 bg-slate-950 flex items-center justify-center z-50">
-    <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-xl w-full max-w-sm text-center">
-      <h2 class="text-lg font-semibold mb-3">Enter your Kick Username</h2>
-      <input id="usernameInput" type="text" maxlength="24"
-        class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-center mb-4" />
-      <button id="saveUsernameBtn" class="w-full px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold">
-        Continue
-      </button>
-    </div>
-  </div>
-
   <div class="w-full max-w-3xl">
     <div class="bg-slate-900/70 backdrop-blur rounded-2xl shadow-2xl border border-slate-800 overflow-hidden">
       <div class="p-6 sm:p-8">
@@ -96,55 +84,41 @@
     };
 
     const ROOM_ID = new URL(location.href).searchParams.get('room') || 'default';
-    const ADMIN_PIN = '772177';
+    const ADMIN_PIN = '1234';
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const overlay = document.getElementById("usernameOverlay");
-    const usernameInput = document.getElementById("usernameInput");
-    const saveUsernameBtn = document.getElementById("saveUsernameBtn");
-    const nameInput = document.getElementById("nameInput");
-
+    // Ask for Kick username using browser prompt
     let kickName = localStorage.getItem("kickName");
-
-    function lockName(name) {
-      localStorage.setItem("kickName", name.trim());
-      nameInput.value = name.trim();
-      nameInput.disabled = true;
-      overlay.style.display = "none";
-
-      if (name.trim() === "ProjectGamba") {
-        const footer = document.querySelector("footer");
-        const btn = document.createElement("button");
-        btn.textContent = "Toggle Online/Offline";
-        btn.className = "ml-4 px-3 py-1 rounded-lg bg-yellow-600 hover:bg-yellow-500 font-semibold";
-        footer.appendChild(btn);
-
-        btn.addEventListener("click", async () => {
-          const pin = prompt("Enter admin PIN to toggle status:");
-          if (pin !== ADMIN_PIN) return toast("Wrong PIN");
-          const statusRef = ref(db, `rooms/${ROOM_ID}/game/status`);
-          const snap = await get(statusRef);
-          const current = snap.val() || "online";
-          const next = current === "online" ? "offline" : "online";
-          await set(statusRef, next);
-          toast(`Game is now ${next.toUpperCase()}`);
-        });
+    if (!kickName) {
+      kickName = prompt("Enter your Kick username:");
+      while (!kickName || !kickName.trim()) {
+        kickName = prompt("Kick username is required to play:");
       }
+      localStorage.setItem("kickName", kickName.trim());
     }
+    document.getElementById("nameInput").value = kickName;
 
-if (kickName) {
-  lockName(kickName);
-}
+    // Special ProjectGamba control
+    if (kickName.trim() === "ProjectGamba") {
+      const footer = document.querySelector("footer");
+      const btn = document.createElement("button");
+      btn.textContent = "Toggle Online/Offline";
+      btn.className = "ml-4 px-3 py-1 rounded-lg bg-yellow-600 hover:bg-yellow-500 font-semibold";
+      footer.appendChild(btn);
 
-// Always attach the button event
-saveUsernameBtn.addEventListener("click", () => {
-  const val = usernameInput.value.trim();
-  if (!val) return alert("Username required");
-  lockName(val);
-});
-
+      btn.addEventListener("click", async () => {
+        const pin = prompt("Enter admin PIN to toggle status:");
+        if (pin !== ADMIN_PIN) return toast("Wrong PIN");
+        const statusRef = ref(db, `rooms/${ROOM_ID}/game/status`);
+        const snap = await get(statusRef);
+        const current = snap.val() || "online";
+        const next = current === "online" ? "offline" : "online";
+        await set(statusRef, next);
+        toast(`Game is now ${next.toUpperCase()}`);
+      });
+    }
 
     // Presence (rough online count)
     const presenceRef = ref(db, `rooms/${ROOM_ID}/presence/${crypto.randomUUID()}`);
@@ -283,4 +257,9 @@ saveUsernameBtn.addEventListener("click", () => {
     }
 
     function escapeHtml(str) {
-      return String(str).replace(/[&<>\"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[
+      return String(str).replace(/[&<>\"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[s]));
+    }
+
+  </script>
+</body>
+</html>
