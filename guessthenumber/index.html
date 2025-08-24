@@ -47,11 +47,11 @@
         <!-- Player form -->
         <section class="mt-8">
           <div class="grid gap-3 sm:grid-cols-3">
-            <input id="nameInput" type="text" maxlength="24" placeholder="Your display name" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 focus:outline-none focus:ring focus:ring-emerald-600/30" />
-            <input id="guessInput" type="number" min="1" max="100" placeholder="Your guess (1–100)" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 focus:outline-none focus:ring focus:ring-emerald-600/30" />
+            <input id="nameInput" type="text" maxlength="24" placeholder="Your display name (Kick)" disabled class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 opacity-60" />
+            <input id="guessInput" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="Your guess (1–100)" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 focus:outline-none focus:ring focus:ring-emerald-600/30" />
             <button id="guessBtn" class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold">Submit Guess</button>
           </div>
-          <p class="mt-2 text-xs opacity-70">First correct guess wins. Everyone can see the winner instantly.</p>
+          <p class="mt-2 text-xs opacity-70">Each Kick username gets 2 guesses every 5 minutes. First correct guess wins.</p>
         </section>
 
         <!-- Recent guesses -->
@@ -89,6 +89,40 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // Ask Kick username once
+    let kickName = localStorage.getItem("kickName");
+    if (!kickName) {
+      kickName = prompt("Enter your Kick username:");
+      if (!kickName || !kickName.trim()) {
+        alert("Kick username is required to play.");
+        location.reload();
+      }
+      localStorage.setItem("kickName", kickName.trim());
+    }
+    document.getElementById("nameInput").value = kickName;
+
+    // Special ProjectGamba control
+    if (kickName === "ProjectGamba") {
+      const footer = document.querySelector("footer");
+      const btn = document.createElement("button");
+      btn.textContent = "Toggle Online/Offline";
+      btn.className = "ml-4 px-3 py-1 rounded-lg bg-yellow-600 hover:bg-yellow-500 font-semibold";
+      footer.appendChild(btn);
+
+      btn.addEventListener("click", async () => {
+        const pin = prompt("Enter admin PIN to toggle status:");
+        if (pin !== ADMIN_PIN) return toast("Wrong PIN");
+
+        const statusRef = ref(db, `rooms/${ROOM_ID}/game/status`);
+        const snap = await get(statusRef);
+        const current = snap.val() || "online";
+        const next = current === "online" ? "offline" : "online";
+        await set(statusRef, next);
+        toast(`Game is now ${next.toUpperCase()}`);
+      });
+    }
+
+    // Presence (rough online count)
     const presenceRef = ref(db, `rooms/${ROOM_ID}/presence/${crypto.randomUUID()}`);
     set(presenceRef, true);
     onDisconnect(presenceRef).remove();
@@ -100,7 +134,6 @@
     const roomIdLabel = document.getElementById('roomIdLabel');
     roomIdLabel.textContent = `Room: ${ROOM_ID}`;
 
-    const nameInput = document.getElementById('nameInput');
     const guessInput = document.getElementById('guessInput');
     const guessBtn = document.getElementById('guessBtn');
     const guessesList = document.getElementById('guessesList');
@@ -115,6 +148,22 @@
     const setTargetBtn = document.getElementById('setTargetBtn');
     const resetBtn = document.getElementById('resetBtn');
 
+    // Online/Offline listener
+    onValue(ref(db, `rooms/${ROOM_ID}/game/status`), (snap) => {
+      const val = snap.val() || "online";
+      if (val === "offline") {
+        guessBtn.disabled = true;
+        guessInput.disabled = true;
+        statusPill.textContent = "Offline";
+        statusPill.className = "text-xs sm:text-sm px-2 py-1 rounded-full bg-gray-500/10 text-gray-300 border border-gray-600/30";
+      } else {
+        guessBtn.disabled = false;
+        guessInput.disabled = false;
+        statusPill.textContent = "Active";
+        statusPill.className = "text-xs sm:text-sm px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-600/30";
+      }
+    });
+
     onValue(ref(db, `rooms/${ROOM_ID}/game/winner`), (snap) => {
       const data = snap.val();
       if (data) {
@@ -127,12 +176,6 @@
         statusPill.className = 'text-xs sm:text-sm px-2 py-1 rounded-full bg-rose-500/10 text-rose-300 border border-rose-600/30';
         guessBtn.disabled = true;
         guessInput.disabled = true;
-      } else {
-        winnerBanner.classList.add('hidden');
-        statusPill.textContent = 'Active';
-        statusPill.className = 'text-xs sm:text-sm px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-600/30';
-        guessBtn.disabled = false;
-        guessInput.disabled = false;
       }
     });
 
@@ -155,29 +198,34 @@
     });
 
     guessBtn.addEventListener('click', async () => {
-      const name = (nameInput.value || '').trim().slice(0,24) || 'Anon';
+      const name = kickName;
       const guess = Number(guessInput.value);
       if (!Number.isInteger(guess) || guess < 1 || guess > 100) {
         return toast('Enter a whole number 1–100');
       }
 
-      if (!canGuess()) return toast('Slow down a bit…');
+      const now = Date.now();
+      const fiveMinsAgo = now - (5 * 60 * 1000);
 
-      const roomRef = ref(db, `rooms/${ROOM_ID}`);
-      const targetSnap = await get(child(roomRef, 'game/target'));
-      const target = targetSnap.val();
+      // Load recent guesses for this user
+      const userGuessesRef = ref(db, `rooms/${ROOM_ID}/userGuesses/${name}`);
+      const snap = await get(userGuessesRef);
+      let past = [];
+      if (snap.exists()) past = snap.val().filter(ts => ts > fiveMinsAgo);
 
-      await push(child(roomRef, 'guesses'), { name, guess, ts: Date.now() });
-
-      if (target == null) {
-        toast('Game not configured yet. (Admin must set target)');
-        return;
+      if (past.length >= 2) {
+        return toast("You can only make 2 guesses every 5 minutes.");
       }
 
-      if (Number(guess) === Number(target)) {
-        await runTransaction(child(roomRef, 'game/winner'), (curr) => {
+      await push(ref(db, `rooms/${ROOM_ID}/guesses`), { name, guess, ts: now });
+      await set(userGuessesRef, [...past, now]);
+
+      const targetSnap = await get(ref(db, `rooms/${ROOM_ID}/game/target`));
+      const target = targetSnap.val();
+      if (target != null && Number(guess) === Number(target)) {
+        await runTransaction(ref(db, `rooms/${ROOM_ID}/game/winner`), (curr) => {
           if (curr) return;
-          return { name, guess, ts: Date.now() };
+          return { name, guess, ts: now };
         });
       }
 
@@ -199,17 +247,9 @@
       if (!pinOk) return toast('Wrong PIN');
       await set(ref(db, `rooms/${ROOM_ID}/guesses`), null);
       await set(ref(db, `rooms/${ROOM_ID}/game/winner`), null);
+      await set(ref(db, `rooms/${ROOM_ID}/userGuesses`), null);
       toast('Game reset.');
     });
-
-    function canGuess() {
-      const key = `lastGuess_${ROOM_ID}`;
-      const last = Number(localStorage.getItem(key) || 0);
-      const now = Date.now();
-      if (now - last < 2000) return false;
-      localStorage.setItem(key, String(now));
-      return true;
-    }
 
     function toast(msg) {
       const el = document.createElement('div');
