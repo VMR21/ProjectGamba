@@ -39,19 +39,23 @@
   }
   .card.flipped .card-inner{ transform:rotateY(180deg) }
   .face{ position:absolute; inset:0; backface-visibility:hidden; display:grid; place-items:center }
-  .front{
-    background:
-      radial-gradient(140px 100px at 30% 20%, rgba(111,124,255,.25), transparent 60%),
-      radial-gradient(180px 120px at 80% 70%, rgba(76,82,255,.18), transparent 65%),
-      #151b2b;
+
+  /* FRONT shows placeholder, then the picked image */
+  .front{ background:#151b2b; }
+  #slotFrontPlaceholder{ color:#b8c4ff; letter-spacing:1px; font-weight:800 }
+  #slotImgFront{
+    display:none; /* hidden until first pick */
+    max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;
+    border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.35);
   }
-  .front h3{letter-spacing:1px; color:#b8c4ff}
+
+  /* BACK shows the same picked image after flip */
   .back{ transform:rotateY(180deg); position:relative; display:grid; place-items:center; background:#0f1322 }
-  /* >>> image fix: show full poster, no crop, crisp */
   .back img{
     max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;
     border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.35);
   }
+
   .meta{display:flex; align-items:center; justify-content:space-between; gap:12px}
   .meta .title{font-size:22px; font-weight:800}
   .meta .sub{color:var(--muted); font-weight:700}
@@ -76,7 +80,12 @@
       <div class="panel card-wrap">
         <div class="card" id="card">
           <div class="card-inner">
-            <div class="face front"><h3>Pick A Slot</h3></div>
+            <!-- FRONT now shows the chosen slot image -->
+            <div class="face front">
+              <div id="slotFrontPlaceholder">Pick A Slot</div>
+              <img id="slotImgFront" alt="">
+            </div>
+            <!-- BACK also shows the chosen slot image (for the flip) -->
             <div class="face back"><img id="slotImg" alt=""></div>
           </div>
         </div>
@@ -109,6 +118,8 @@
       pickBtn: document.getElementById('pickBtn'),
       card: document.getElementById('card'),
       slotImg: document.getElementById('slotImg'),
+      slotImgFront: document.getElementById('slotImgFront'),
+      slotFrontPlaceholder: document.getElementById('slotFrontPlaceholder'),
       slotName: document.getElementById('slotName'),
       slotProvider: document.getElementById('slotProvider'),
       status: document.getElementById('status'),
@@ -122,11 +133,11 @@
         if(u.hostname.includes('imgix')){
           const params = u.searchParams;
           if(params.has('w')) params.set('w','720');
-          if(params.has('h')) params.set('h','944'); // same ratio as 180x236 but bigger
+          if(params.has('h')) params.set('h','944'); // similar ratio to 180x236
           return u.toString();
         }
       }catch(e){}
-      return url; // non-imgix URLs unchanged
+      return url;
     }
 
     const byProvider = () => allSlots.filter(s => selected.size ? selected.has(s.provider) : true);
@@ -154,6 +165,14 @@
     function flipToBack(){ els.card.classList.add('flipped'); }
     function flipToFront(){ els.card.classList.remove('flipped'); }
 
+    function showImages(url){
+      // hide placeholder, show images on both faces
+      els.slotFrontPlaceholder.style.display = 'none';
+      els.slotImgFront.style.display = 'block';
+      els.slotImgFront.src = url;   // front
+      els.slotImg.src = url;        // back
+    }
+
     function pickRandom() {
       const pool = byProvider();
       if (!pool.length) { alert('No slots in current filter. Select some providers.'); return; }
@@ -162,13 +181,14 @@
 
       const pre = new Image();
       pre.onload = () => {
-        els.slotImg.src = hi;
+        showImages(hi);
         els.slotImg.alt = choice.name;
         els.slotName.textContent = choice.name;
         els.slotProvider.textContent = choice.provider;
         flipToBack();
       };
       pre.onerror = () => {
+        els.slotImgFront.removeAttribute('src');
         els.slotImg.removeAttribute('src');
         els.slotName.textContent = choice.name;
         els.slotProvider.textContent = `${choice.provider} (image unavailable)`;
