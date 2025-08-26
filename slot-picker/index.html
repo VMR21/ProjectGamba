@@ -24,8 +24,8 @@
 
   .card-wrap{display:grid;place-items:center;min-height:560px}
   .card{
-    width:360px; aspect-ratio:720/944; height:auto;
-    perspective:1200px; filter:drop-shadow(0 20px 40px rgba(0,0,0,.45));
+    width:360px;aspect-ratio:720/944;height:auto;
+    perspective:1200px;filter:drop-shadow(0 20px 40px rgba(0,0,0,.45));
   }
   .card-inner{
     position:relative;width:100%;height:100%;transform-style:preserve-3d;
@@ -41,10 +41,8 @@
   .front{background:#151b2b;}
   .back{background:#0f1322;transform:rotateY(180deg)}
 
-  #slotFrontPlaceholder{color:#b8c4ff;letter-spacing:1px;font-weight:800}
-
-  #slotImg{
-    max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;
+  #slotImgFront,#slotImgBack{
+    max-width:100%;max-height:100%;object-fit:contain;
     border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.35)
   }
 
@@ -72,14 +70,9 @@
       <div class="panel card-wrap">
         <div class="card" id="card">
           <div class="card-inner">
-            <!-- BACK = placeholder -->
-            <div class="face back">
-              <div id="slotFrontPlaceholder">Pick A Slot</div>
-            </div>
-            <!-- FRONT = slot image -->
-            <div class="face front">
-              <img id="slotImg" alt="">
-            </div>
+            <!-- Same image on both faces -->
+            <div class="face front"><img id="slotImgFront" alt=""></div>
+            <div class="face back"><img id="slotImgBack" alt=""></div>
           </div>
         </div>
       </div>
@@ -107,14 +100,13 @@
       counts:document.getElementById('counts'),
       pickBtn:document.getElementById('pickBtn'),
       card:document.getElementById('card'),
-      slotImg:document.getElementById('slotImg'),
-      slotFrontPlaceholder:document.getElementById('slotFrontPlaceholder'),
+      slotImgFront:document.getElementById('slotImgFront'),
+      slotImgBack:document.getElementById('slotImgBack'),
       slotName:document.getElementById('slotName'),
       slotProvider:document.getElementById('slotProvider'),
       status:document.getElementById('status')
     };
 
-    // Force every URL to w=720&h=944&fit=min&auto=format
     function upscale(url){
       if(!url) return url;
       try{
@@ -127,15 +119,15 @@
       }catch(e){ return url; }
     }
 
-    const byProvider = () => allSlots.filter(s => selected.size ? selected.has(s.provider) : true);
+    const byProvider=()=>allSlots.filter(s=>selected.size?selected.has(s.provider):true);
 
     function renderProviders(){
       els.providers.innerHTML='';
-      [...providers].sort((a,b)=>a.localeCompare(b)).forEach(p=>{
+      [...providers].sort().forEach(p=>{
         const chip=document.createElement('button');
         chip.className='chip'+(selected.has(p)?' active':'');
         chip.textContent=p;
-        chip.onclick=()=>{ selected.has(p)?selected.delete(p):selected.add(p); renderProviders(); refreshCounts(); };
+        chip.onclick=()=>{selected.has(p)?selected.delete(p):selected.add(p);renderProviders();refreshCounts();}
         els.providers.appendChild(chip);
       });
       refreshCounts();
@@ -143,19 +135,20 @@
     function refreshCounts(){
       els.filterSummary.textContent=`${selected.size} provider${selected.size!==1?'s':''} selected`;
       const visible=byProvider().length;
-      els.counts.textContent=allSlots.length?`${visible.toLocaleString()} of ${allSlots.length.toLocaleString()} slots match`:'';
+      els.counts.textContent=allSlots.length?`${visible} of ${allSlots.length} slots match`:'';
     }
-    function flipToBack(){ els.card.classList.add('flipped'); }
-    function flipToFront(){ els.card.classList.remove('flipped'); }
+
+    function flipToBack(){els.card.classList.add('flipped');}
+    function flipToFront(){els.card.classList.remove('flipped');}
 
     function showImages(url){
-      els.slotFrontPlaceholder.style.display='none';
-      els.slotImg.src=url;   // front = slot image
+      els.slotImgFront.src=url;
+      els.slotImgBack.src=url;
     }
 
     function pickRandom(){
       const pool=byProvider();
-      if(!pool.length){ alert('No slots in current filter.'); return; }
+      if(!pool.length){alert('No slots in current filter.');return;}
       const choice=pool[Math.floor(Math.random()*pool.length)];
       const hi=upscale(choice.image);
 
@@ -174,9 +167,9 @@
 
       if(els.card.classList.contains('flipped')){
         flipToFront();
-        setTimeout(()=> pre.src=hi, 350);
+        setTimeout(()=>pre.src=hi,350);
       }else{
-        setTimeout(()=> pre.src=hi, 60);
+        setTimeout(()=>pre.src=hi,60);
       }
     }
 
@@ -200,10 +193,10 @@
       }
     }
 
-    els.selectAll.onclick=()=>{ selected=new Set(providers); renderProviders(); };
-    els.deselectAll.onclick=()=>{ selected=new Set(); renderProviders(); };
+    els.selectAll.onclick=()=>{selected=new Set(providers);renderProviders();};
+    els.deselectAll.onclick=()=>{selected=new Set();renderProviders();};
     els.pickBtn.onclick=pickRandom;
-    window.addEventListener('keydown',e=>{ if(e.code==='Space'){ e.preventDefault(); pickRandom(); } });
+    window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();pickRandom();}});
 
     loadCSV();
   </script>
