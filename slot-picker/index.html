@@ -1,105 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>ProjectGamba Slot Picker</title>
-    <!-- New font for the Slot Picker -->
+    <title>ProjectGamba - Slot Picker</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="ProjectGamba Slot Picker.">
+    <meta property="og:image" content="https://i.ibb.co/BKrK7Dr6/image.png">
+    <link rel="icon" type="image/jpg" href="/assets/logo1.png">
+    <!-- Original CSS files for the ProjectGamba design -->
+    <link rel="stylesheet" type="text/css" href="/css/app.css">
+    <link rel="stylesheet" type="text/css" href="/css/lb.css">
+    <link rel="stylesheet" type="text/css" href="/css/vendor.css">
+    <link rel="stylesheet" type="text/css" href="/css/cards.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/toast.css">
+    <!-- New font for the Slot Picker, integrated with existing styles -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&display=swap" rel="stylesheet">
-    <!-- General styles from the original site (only those relevant for player, glow, particles, etc.) -->
     <style>
-        /* Draggable Player Styles */
-        .draggable {
-            position: fixed;
-            bottom: 15px;
-            right: 15px;
-            width: 350px;
-            height: 250px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            overflow: hidden;
-            z-index: 1000;
-            background: white;
-            border: 2px solid #2775ca;
-            box-shadow: 0 0 100px rgba(39, 117, 202, 1);
-        }
-        .controls {
-            display: flex;
-            align-items: center;
-            background-color: #333;
-            padding: 5px;
-            cursor: move;
-        }
-        .drag-handle {
-            flex-grow: 1;
-            text-align: left;
-            color: #2775ca;
-            font-size: 20px;
-            font-weight: 900;
-            box-shadow: 0 0 100px rgba(39, 117, 202, 1);
-            padding: 0 15px;
-        }
-        .close-btn {
-            cursor: pointer;
-            background: none;
-            border: none;
-            color: #2775ca;
-            font-size: 20px;
-            font-weight: 900;
-            line-height: 30px;
-            box-shadow: 0 0 100px rgba(39, 117, 202, 1);
-            padding: 0 20px;
-        }
-        iframe {
-            width: 100%;
-            height: calc(100% - 40px);
-            border: none;
-        }
-        .minimized-icon {
-            display: none; /* Hidden by default */
-            align-items: center;
-            justify-content: center;
-            position: fixed;
-            bottom: 15px;
-            right: 15px;
-            width: 50px;
-            height: 50px;
-            border-radius: 25px; /* Makes it round */
-            background-color: #333;
-            color: white;
-            font-size: 30px;
-            z-index: 1001; /* Should be above the draggable player */
-            cursor: pointer;
-            box-shadow: 0 0 100px rgba(39, 117, 202, 1);
-        }
-        .open-btn {
-            background: none;
-            border: none;
-            color: #2775ca;
-            font-size: 20px;
-            font-weight: 900;
-            cursor: pointer;
-        }
-        @media (max-width: 570px) {
-            .draggable {
-                left: 50%;
-                transform: translateX(-50%);
-                right: auto; /* Override right for centering */
-            }
-        }
-
-        /* Particle and Glow Container Styles */
+        /* Original Website Background & Animation Styles */
         body {
             margin: 0;
-            /* Padding will be handled by the .app container */
-            font-family: Nunito, system-ui, Arial; /* Use Nunito as primary font */
-            color: var(--text);
-            /* New background for Slot Picker, overrides original */
-            background: radial-gradient(1200px 800px at 15% 0%, #1a1b36 0%, #0c0f16 45%) fixed,
-                        radial-gradient(1000px 800px at 90% 30%, #122339 0%, #0c0f16 60%) fixed, var(--bg1);
-            min-height: 100vh; /* Ensure body takes full height for background */
-            display: flex; /* Flexbox for layout */
+            padding: 0; /* Let appContent handle padding */
+            font-family: Nunito, system-ui, Arial, sans-serif; /* Prioritize Nunito for Slot Picker, but fallback to existing */
+            color: #e8ecff; /* Default text color for the site */
+            min-height: 100vh;
+            display: flex;
             flex-direction: column;
+            /* Original background gradients */
+            background: radial-gradient(1200px 800px at 15% 0%, #1a1b36 0%, #0c0f16 45%) fixed,
+                        radial-gradient(1000px 800px at 90% 30%, #122339 0%, #0c0f16 60%) fixed, #0c0f16;
         }
         canvas {
             position: fixed;
@@ -107,7 +36,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -2; /* Below other content */
+            z-index: -2;
         }
         .glow-container {
             position: fixed;
@@ -116,39 +45,33 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            pointer-events: none; /* Allow interaction with elements behind it */
-            z-index: -1; /* Below content but above canvas */
+            pointer-events: none;
+            z-index: -1;
         }
         .left-glow, .right-glow {
             position: absolute;
-            width: 500px; /* Adjust size as needed */
-            height: 500px; /* Adjust size as needed */
+            width: 500px;
+            height: 500px;
             border-radius: 50%;
-            filter: blur(150px); /* Soft glow */
-            opacity: 0.3; /* Adjust intensity */
-            background-color: #2775ca; /* Blue glow */
+            filter: blur(150px);
+            opacity: 0.3;
+            background-color: #2775ca;
         }
-        .left-glow {
-            top: 10%;
-            left: -10%;
-        }
-        .right-glow {
-            bottom: 5%;
-            right: -10%;
-        }
+        .left-glow { top: 10%; left: -10%; }
+        .right-glow { bottom: 5%; right: -10%; }
         #leftsvg, #rightsvg {
             position: fixed;
             height: 100%;
             top: 0;
-            z-index: -1; /* Behind content */
-            opacity: 0.1; /* Subtle effect */
+            z-index: -1;
+            opacity: 0.1;
         }
         #leftsvg { left: 0; }
         #rightsvg { right: 0; }
 
-        /* Header Styles */
+        /* Header Styles - Replicated from your original design */
         header {
-            background: rgba(0, 0, 0, 0.4); /* Slightly transparent background */
+            background: rgba(0, 0, 0, 0.4);
             padding: 10px 24px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
@@ -170,295 +93,334 @@
             width: auto;
         }
         .title {
-            color: #2775ca; /* Blue from original site */
+            color: #2775ca;
             font-size: 28px;
             font-weight: 900;
             margin: 0;
             text-shadow: 0 0 15px rgba(39, 117, 202, 0.7);
         }
+        .nav-links {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 20px;
+        }
+        .nav-links a {
+            color: #e8ecff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .nav-links a:hover {
+            background-color: rgba(39, 117, 202, 0.2);
+            color: #fff;
+        }
 
-        /* Footer Styles */
+        /* Main App Content Wrapper */
+        #appContent {
+            max-width: 1150px;
+            margin: 50px auto; /* Adjust margin to give space around content */
+            padding: 0 24px; /* Add padding to the sides */
+            flex-grow: 1; /* Allows content to expand and push footer down */
+        }
+        #appContent > .row.text {
+            text-align: center;
+            margin-top: 50px;
+            margin-bottom: 30px; /* Spacing for the original text rows */
+        }
+        #appContent > .row.text > .title {
+            font-size: 36px;
+            font-weight: 800;
+            color: #2775ca;
+            text-shadow: 0 0 15px rgba(39, 117, 202, 0.7);
+        }
+
+        /* Slot Picker Panel Styles - Adapted for transparency and integration */
+        .slot-picker-container {
+            margin-top: 80px; /* Space from content above */
+            margin-bottom: 60px; /* Space before next section/footer */
+        }
+        .slot-picker-container .slot-picker-title {
+            text-align: center;
+            font-size: 36px;
+            font-weight: 800;
+            color: #2775ca;
+            text-shadow: 0 0 15px rgba(39, 117, 202, 0.7);
+            margin-bottom: 40px;
+        }
+        .slot-picker-app {
+            max-width: 1150px;
+            margin: 0 auto; /* Center the slot picker content */
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 24px;
+        }
+        @media (max-width: 768px) {
+            .slot-picker-app {
+                grid-template-columns: 1fr; /* Stack columns on smaller screens */
+            }
+        }
+        .slot-picker-app .panel {
+            /* Transparent background for the slot picker panels */
+            background: rgba(27, 34, 54, 0.7); /* Slightly transparent dark blue */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Lighter, subtle border */
+            padding: 18px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); /* Consistent shadow */
+        }
+        .slot-picker-app .panel h2 {
+            margin: 0 0 12px;
+            font-size: 26px;
+            color: var(--text); /* Use general text color for internal titles */
+        }
+        .slot-picker-app .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 12px 0 6px;
+        }
+        .slot-picker-app .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .slot-picker-app .chip {
+            background: transparent;
+            color: var(--text);
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .slot-picker-app .chip.active {
+            background: var(--chip);
+            border-color: transparent;
+        }
+        .slot-picker-app .btn {
+            background: var(--btn);
+            color: #fff;
+            border: 0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .slot-picker-app .btn:hover {
+            background: var(--btn-hover);
+        }
+        .slot-picker-app .right {
+            display: grid;
+            gap: 16px;
+            grid-template-rows: auto 1fr auto;
+        }
+        .slot-picker-app .card-wrap {
+            display: grid;
+            place-items: center;
+            min-height: 560px;
+        }
+        .slot-picker-app .card {
+            width: 360px;
+            aspect-ratio: 720/944;
+            height: auto;
+            perspective: 1200px;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.45));
+        }
+        .slot-picker-app .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform .7s cubic-bezier(.2,.7,.2,1);
+            border-radius: var(--radius);
+            overflow: hidden;
+            /* Transparent background for the card inner */
+            background: rgba(15, 19, 34, 0.8); /* Slightly more opaque dark blue */
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .slot-picker-app .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .slot-picker-app .face {
+            position: absolute;
+            inset: 0;
+            padding: 12px;
+            display: grid;
+            place-items: center;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .slot-picker-app .front {
+            background: rgba(21, 27, 43, 0.85); /* Transparent dark background */
+        }
+        .slot-picker-app .back {
+            background: rgba(15, 19, 34, 0.9); /* Transparent dark background */
+            transform: rotateY(180deg);
+        }
+        #slotImgFront, #slotImgBack {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+        }
+        #slotImgFront { transform: scaleX(-1); }
+        #slotImgBack { transform: none; }
+        .slot-picker-app .meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .slot-picker-app .meta .title {
+            font-size: 22px;
+            font-weight: 800;
+        }
+        .slot-picker-app .meta .sub {
+            color: var(--muted);
+            font-weight: 700;
+        }
+        .slot-picker-app .foot {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .slot-picker-app .pill {
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px dashed rgba(255, 255, 255, 0.18);
+            color: var(--muted);
+        }
+
+        /* Footer Styles - Replicated from your original design */
         .inner-footer {
             max-width: 1150px;
             margin: 0 auto;
             padding: 24px;
             display: flex;
             justify-content: space-between;
-            align-items: flex-end; /* Align items to the bottom */
+            align-items: flex-start;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 30px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             background: rgba(0, 0, 0, 0.4);
-            margin-top: auto; /* Push footer to the bottom */
+            margin-top: auto;
+            color: #e8ecff;
         }
         .inner-footer .col {
             flex: 1;
+            min-width: 200px;
+        }
+        .inner-footer .col-5 {
+            flex: 1.5;
             min-width: 250px;
         }
         .inner-footer .title {
             font-size: 18px;
             font-weight: 800;
             color: #2775ca;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(39, 117, 202, 0.5);
         }
         .inner-footer .subtitle {
             font-size: 14px;
-            color: var(--muted);
+            color: #93a1bd;
             line-height: 1.5;
-            display: block; /* Ensure it takes full width */
+            display: block;
+            margin-bottom: 8px;
+            text-decoration: none;
+        }
+        .inner-footer .subtitle:hover {
+            color: #2775ca;
         }
         .inner-footer .copyright {
             font-size: 14px;
-            color: var(--muted);
+            color: #93a1bd;
             line-height: 1.5;
         }
-
-        /* Slot Picker Specific Styles */
-        :root{
-            --bg1:#0c0f16;
-            --card:#1b2236;
-            --chip:#4c52ff;
-            --text:#e8ecff;
-            --muted:#93a1bd;
-            --btn:#3b42ff;
-            --btn-hover:#2b31d8;
-            --radius:16px;
-            --shadow:0 10px 30px rgba(0,0,0,.35)
-        }
-        /* No need for * or body, already handled */
-        .app{
-            max-width:1150px;
-            margin:24px auto; /* Add margin-top for separation from header */
-            padding: 0 24px; /* Add padding to sides for smaller screens */
-            display:grid;
-            grid-template-columns:1.2fr 1fr;
-            gap:24px;
-            flex-grow: 1; /* Allow the app content to grow and fill space */
-        }
-        @media (max-width: 768px) {
-            .app {
-                grid-template-columns: 1fr; /* Stack columns on smaller screens */
-            }
-        }
-        .panel{
-            background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
-            border:1px solid rgba(255,255,255,.08);
-            padding:18px;
-            border-radius:20px;
-            box-shadow:var(--shadow)
-        }
-        .panel h2{
-            margin:0 0 12px;
-            font-size:26px
-        }
-        .row{
-            display:flex;
-            gap:10px;
-            flex-wrap:wrap;
-            margin:12px 0 6px
-        }
-        .controls{
-            display:flex;
-            gap:10px;
-            flex-wrap:wrap
-        }
-        .chip{
-            background:transparent;
-            color:var(--text);
-            padding:10px 14px;
-            border-radius:999px;
-            border:1px solid rgba(255,255,255,.18);
-            font-weight:800;
-            cursor:pointer
-        }
-        .chip.active{
-            background:var(--chip);
-            border-color:transparent
-        }
-        .btn{
-            background:var(--btn);
-            color:#fff;
-            border:0;
-            border-radius:12px;
-            padding:12px 16px;
-            font-weight:800;
-            cursor:pointer
-        }
-        .btn:hover{
-            background:var(--btn-hover)
-        }
-        .right{
-            display:grid;
-            gap:16px;
-            grid-template-rows:auto 1fr auto
-        }
-        .card-wrap{
-            display:grid;
-            place-items:center;
-            min-height:560px
-        }
-        .card{
-            width:360px;
-            aspect-ratio:720/944;
-            height:auto;
-            perspective:1200px;
-            filter:drop-shadow(0 20px 40px rgba(0,0,0,.45));
-        }
-        .card-inner{
-            position:relative;
-            width:100%;
-            height:100%;
-            transform-style:preserve-3d;
-            transition:transform .7s cubic-bezier(.2,.7,.2,1);
-            border-radius:var(--radius);
-            overflow:hidden;
-            border:1px solid rgba(255,255,255,.08);
-            background:var(--card)
-        }
-        .card.flipped .card-inner{
-            transform:rotateY(180deg)
-        }
-        .face{
-            position:absolute;
-            inset:0;
-            padding:12px;
-            display:grid;
-            place-items:center;
-            backface-visibility:hidden;
-            -webkit-backface-visibility:hidden
-        }
-        .front{
-            background:#151b2b;
-        }
-        .back{
-            background:#0f1322;
-            transform:rotateY(180deg)
-        }
-        #slotImgFront,#slotImgBack{
-            max-width:100%;
-            max-height:100%;
-            object-fit:contain;
-            border-radius:12px;
-            box-shadow:0 6px 18px rgba(0,0,0,.35)
-        }
-        #slotImgFront{
-            transform:scaleX(-1); /* mirrored on the front */
-        }
-        #slotImgBack{
-            transform:none;       /* normal on the back */
-        }
-        .meta{
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:12px
-        }
-        .meta .title{
-            font-size:22px;
-            font-weight:800
-        }
-        .meta .sub{
-            color:var(--muted);
-            font-weight:700
-        }
-        .foot{
-            display:flex;
-            gap:12px;
-            flex-wrap:wrap;
-            align-items:center;
-            justify-content:flex-end
-        }
-        .pill{
-            padding:8px 10px;
-            border-radius:999px;
-            border:1px dashed rgba(255,255,255,.18);
-            color:var(--muted)
-        }
+        /* Removed .footer-socials and its associated styles */
     </style>
 </head>
 <body>
-    <!-- Toast notifications (if needed) -->
     <div id="toast">
         <span id="message"></span>
     </div>
 
-    <!-- Draggable Player -->
-    <div id="draggable-player" class="draggable">
-        <div id="controls" class="controls">
-            <div id="drag-handle" class="drag-handle">&#x2630;</div>
-            <button id="close-btn" class="close-btn">&times;</button>
-        </div>
-        <iframe src="https://player.kick.com/projectgamba" frameborder="0" allow="autoplay; fullscreen" allowfullscreen>
-        </iframe>
-    </div>
-    <!-- Minimized Player Icon -->
-    <div id="minimized-icon" class="minimized-icon">
-        <button id="open-btn" class="open-btn">
-            <img src="/assets/logo1.png" alt="ProjectGamba Logo" style="height: 30px; width: auto;"/>
-        </button>
-    </div>
+    <!-- Live stream player and its minimized icon are removed -->
 
-    <!-- Particle Background Canvas -->
     <canvas id="particleCanvas"></canvas>
-
-    <!-- Glow Effects -->
     <div class="glow-container">
         <div class="left-glow"></div>
         <div class="right-glow"></div>
     </div>
-    <!-- Decorative SVGs -->
     <object type="image/png" data="/assets/left-rainbet.png" id="leftsvg" height="100%"></object>
     <object type="image/png" data="/assets/right-rainbet.png" id="rightsvg" height="100%"></object>
 
-    <!-- Header -->
     <header>
         <nav>
             <div class="logo-title">
                 <img src="/assets/logo1.png" alt="Site logo" class="logo">
                 <h1 class="title">ProjectGamba</h1>
             </div>
-            <!-- Removed nav-links as they were specific to the old content -->
+            <ul class="nav-links">
+                <li><a href="/leaderboard/rainbet">LEADERBOARDS</a></li>
+                <li><a href="/raffle">WEEKLY RAFFLE</a></li>
+            </ul>
         </nav>
     </header>
 
-    <!-- Main Slot Picker Application Content -->
-    <div class="app">
-        <div class="panel">
-            <h2>Providers</h2>
-            <div class="controls">
-                <button class="btn" id="selectAll">Select All</button>
-                <button class="btn" id="deselectAll">Deselect All</button>
-                <span class="pill" id="status">Loading /slots.csv…</span>
-            </div>
-            <div id="providers" class="row"></div>
-            <small id="counts"></small>
-        </div>
+    <div id="appContent">
+        <!-- The "COMPETE ON OUR LEADERBOARDs!" section, image, and coin animations are removed -->
+        <!-- The Rainbet Promotional Card ("$1,000 and code projectgamba panel") is removed -->
 
-        <div class="right">
-            <div class="panel card-wrap">
-                <div class="card" id="card">
-                    <div class="card-inner">
-                        <!-- FRONT = mirrored -->
-                        <div class="face front"><img id="slotImgFront" alt=""></div>
-                        <!-- BACK = normal -->
-                        <div class="face back"><img id="slotImgBack" alt=""></div>
+        <!-- Slot Picker Panel -->
+        <div class="slot-picker-container">
+            <span class="slot-picker-title">Slot Picker</span>
+            <div class="slot-picker-app">
+                <div class="panel">
+                    <h2>Providers</h2>
+                    <div class="controls">
+                        <button class="btn" id="selectAll">Select All</button>
+                        <button class="btn" id="deselectAll">Deselect All</button>
+                        <span class="pill" id="status">Loading /slots.csv…</span>
                     </div>
+                    <div id="providers" class="row"></div>
+                    <small id="counts"></small>
+                </div>
+
+                <div class="right">
+                    <div class="panel card-wrap">
+                        <div class="card" id="card">
+                            <div class="card-inner">
+                                <div class="face front"><img id="slotImgFront" alt=""></div>
+                                <div class="face back"><img id="slotImgBack" alt=""></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel meta">
+                        <div>
+                            <div class="title" id="slotName">—</div>
+                            <div class="sub" id="slotProvider">—</div>
+                        </div>
+                        <button class="btn" id="pickBtn">Pick A Slot</button>
+                    </div>
+
+                    <div class="foot"><small class="pill" id="filterSummary">0 providers selected</small></div>
                 </div>
             </div>
-
-            <div class="panel meta">
-                <div>
-                    <div class="title" id="slotName">—</div>
-                    <div class="sub" id="slotProvider">—</div>
-                </div>
-                <button class="btn" id="pickBtn">Pick A Slot</button>
-            </div>
-
-            <div class="foot"><small class="pill" id="filterSummary">0 providers selected</small></div>
         </div>
+
+        <!-- The "Our Socials!" section and social media cards are removed -->
     </div>
 
-    <!-- Footer -->
+    <!-- Footer - Replicated from your original design -->
     <footer class="inner-footer">
         <div class="col-5">
             <div class="content">
@@ -471,7 +433,7 @@
             <a href="/" class=""><span class="subtitle">Terms of Service</span></a>
             <a href="/" class=""><span class="subtitle">Privacy Policy</span></a>
         </div>
-        <!-- Removed socials column from footer as it was redundant/specific to old content -->
+        <!-- Removed the Socials column from the footer -->
         <div class="col">
             <span class="title">BeGambleAware.com</span>
             <span class="subtitle" style="font-size: 9px;">Responsible Gambling Advisory: While gambling can be entertaining,
@@ -482,65 +444,17 @@
         </div>
     </footer>
 
-    <!-- Scripts from original site and new Slot Picker -->
-    <script src="/js/particles.js"></script> <!-- Assuming this handles the background particles -->
-    <script src="/js/toast.js"></script> <!-- If toast notifications are desired -->
+    <!-- Scripts -->
+    <script src="/js/app.js"></script>
+    <script src="/js/particles.js"></script>
+    <script src="/js/toast.js"></script>
     <script>
-        // Draggable player script from the original site
-        window.onload = function () {
-            var player = document.getElementById('draggable-player');
-            var dragHandle = document.getElementById('drag-handle');
-            var closeBtn = document.getElementById('close-btn');
-            var minimizedIcon = document.getElementById('minimized-icon');
-            var openBtn = document.getElementById('open-btn');
+        // The draggable player script is removed as the player is no longer present.
 
-            let isDragging = false;
-            let startX, startY, initialMouseX, initialMouseY;
-
-            dragHandle.addEventListener('mousedown', function (e) {
-                isDragging = true;
-                initialMouseX = e.clientX;
-                initialMouseY = e.clientY;
-                startX = player.offsetLeft;
-                startY = player.offsetTop;
-                player.style.cursor = 'grabbing';
-            });
-
-            document.addEventListener('mousemove', function (e) {
-                if (!isDragging) return;
-                let dx = e.clientX - initialMouseX;
-                let dy = e.clientY - initialMouseY;
-                player.style.left = startX + dx + 'px';
-                player.style.top = startY + dy + 'px';
-            });
-
-            document.addEventListener('mouseup', function () {
-                isDragging = false;
-                player.style.cursor = 'grab';
-            });
-
-            closeBtn.onclick = function () {
-                player.style.display = 'none';
-                minimizedIcon.style.display = 'flex'; // Show the minimized icon
-            };
-
-            openBtn.onclick = function () {
-                player.style.display = 'block';
-                minimizedIcon.style.display = 'none'; // Hide the minimized icon
-            };
-
-            // Initialize position to bottom-right if not set by user dragging
-            if (!player.style.left && !player.style.top) {
-                player.style.left = (window.innerWidth - player.offsetWidth - 15) + 'px';
-                player.style.top = (window.innerHeight - player.offsetHeight - 15) + 'px';
-            }
-        };
-    </script>
-
-    <!-- PapaParse for CSV parsing (new for Slot Picker) -->
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-    <!-- Slot Picker's main JavaScript logic -->
-    <script>
+        // PapaParse for CSV parsing - Retained for Slot Picker
+        <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+        // Slot Picker's main JavaScript logic - Retained
+        <script>
         let allSlots = [], providers = new Set(), selected = new Set();
         const els = {
             providers: document.getElementById('providers'),
@@ -600,12 +514,11 @@
         function pickRandom() {
             const pool = byProvider();
             if (!pool.length) {
-                // Using a custom message box instead of alert()
                 const messageDiv = document.createElement('div');
                 messageDiv.style.cssText = `
                     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
                     background: #333; color: white; padding: 20px; border-radius: 10px;
-                    box-shadow: var(--shadow); z-index: 10000; text-align: center;
+                    box-shadow: 0 10px 30px rgba(0,0,0,.35); z-index: 10000; text-align: center;
                 `;
                 messageDiv.innerHTML = `
                     <p>No slots in current filter.</p>
@@ -640,7 +553,6 @@
 
         async function loadCSV() {
             try {
-                // Ensure /slots.csv is available at the root of your deployment
                 const res = await fetch('/slots.csv', { cache: 'no-store' });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const text = await res.text();
