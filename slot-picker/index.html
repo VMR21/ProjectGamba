@@ -38,22 +38,28 @@
     border:1px solid rgba(255,255,255,.08); background:var(--card);
   }
   .card.flipped .card-inner{ transform:rotateY(180deg) }
-  .face{ position:absolute; inset:0; backface-visibility:hidden; display:grid; place-items:center }
 
-  /* FRONT shows placeholder, then the picked image */
+  /* 3D faces (fix mirroring + Safari glitch) */
+  .face{
+    position:absolute; inset:0; padding:12px; display:grid; place-items:center;
+    backface-visibility:hidden; -webkit-backface-visibility:hidden;
+    transform:rotateY(0);
+  }
   .front{ background:#151b2b; }
+  .back{ background:#0f1322; transform:rotateY(180deg); }
+
+  /* FRONT starts with placeholder, then shows picked image */
   #slotFrontPlaceholder{ color:#b8c4ff; letter-spacing:1px; font-weight:800 }
   #slotImgFront{
-    display:none; /* hidden until first pick */
+    display:none;
     max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;
-    border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.35);
+    border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.35); display:block;
   }
 
-  /* BACK shows the same picked image after flip */
-  .back{ transform:rotateY(180deg); position:relative; display:grid; place-items:center; background:#0f1322 }
+  /* BACK shows same image after flip — no crop */
   .back img{
     max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;
-    border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.35);
+    border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.35); display:block;
   }
 
   .meta{display:flex; align-items:center; justify-content:space-between; gap:12px}
@@ -80,12 +86,12 @@
       <div class="panel card-wrap">
         <div class="card" id="card">
           <div class="card-inner">
-            <!-- FRONT now shows the chosen slot image -->
+            <!-- FRONT shows placeholder or the chosen slot -->
             <div class="face front">
               <div id="slotFrontPlaceholder">Pick A Slot</div>
               <img id="slotImgFront" alt="">
             </div>
-            <!-- BACK also shows the chosen slot image (for the flip) -->
+            <!-- BACK shows the chosen slot after flip -->
             <div class="face back"><img id="slotImg" alt=""></div>
           </div>
         </div>
@@ -131,9 +137,9 @@
       try{
         const u = new URL(url, location.href);
         if(u.hostname.includes('imgix')){
-          const params = u.searchParams;
-          if(params.has('w')) params.set('w','720');
-          if(params.has('h')) params.set('h','944'); // similar ratio to 180x236
+          const p = u.searchParams;
+          if(p.has('w')) p.set('w','720');
+          if(p.has('h')) p.set('h','944'); // similar ratio to 180x236, but bigger
           return u.toString();
         }
       }catch(e){}
@@ -166,7 +172,7 @@
     function flipToFront(){ els.card.classList.remove('flipped'); }
 
     function showImages(url){
-      // hide placeholder, show images on both faces
+      // Hide placeholder, show images on both faces (prevents mirrored front during flip)
       els.slotFrontPlaceholder.style.display = 'none';
       els.slotImgFront.style.display = 'block';
       els.slotImgFront.src = url;   // front
@@ -181,7 +187,7 @@
 
       const pre = new Image();
       pre.onload = () => {
-        showImages(hi);
+        showImages(hi);                           // set both faces with the same orientation
         els.slotImg.alt = choice.name;
         els.slotName.textContent = choice.name;
         els.slotProvider.textContent = choice.provider;
@@ -195,6 +201,7 @@
         flipToBack();
       };
 
+      // Do a front flip first if we're already showing the back, so you don't see a mirrored frame
       if (els.card.classList.contains('flipped')) {
         flipToFront();
         setTimeout(() => pre.src = hi, 350);
