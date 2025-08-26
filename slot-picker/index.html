@@ -39,28 +39,26 @@
   }
   .card.flipped .card-inner{ transform:rotateY(180deg) }
 
-  /* 3D faces (fix mirroring + Safari glitch) */
+  /* Faces */
   .face{
     position:absolute; inset:0; padding:12px; display:grid; place-items:center;
     backface-visibility:hidden; -webkit-backface-visibility:hidden;
-    transform:rotateY(0);
   }
   .front{ background:#151b2b; }
   .back{ background:#0f1322; transform:rotateY(180deg); }
 
-  /* FRONT starts with placeholder, then shows picked image */
+  /* Placeholder */
   #slotFrontPlaceholder{ color:#b8c4ff; letter-spacing:1px; font-weight:800 }
-  #slotImgFront{
-    display:none;
-    max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;
-    border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.35); display:block;
-  }
 
-  /* BACK shows same image after flip — no crop */
-  .back img{
-    max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;
-    border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.35); display:block;
+  /* Images fit in box */
+  #slotImgFront, #slotImg {
+    max-width:100%; max-height:100%;
+    width:auto; height:auto; object-fit:contain;
+    border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.35);
   }
+  #slotImgFront{ display:none; }
+  /* back should be mirrored */
+  #slotImg { transform:scaleX(-1); }
 
   .meta{display:flex; align-items:center; justify-content:space-between; gap:12px}
   .meta .title{font-size:22px; font-weight:800}
@@ -86,12 +84,12 @@
       <div class="panel card-wrap">
         <div class="card" id="card">
           <div class="card-inner">
-            <!-- FRONT shows placeholder or the chosen slot -->
+            <!-- FRONT normal -->
             <div class="face front">
               <div id="slotFrontPlaceholder">Pick A Slot</div>
               <img id="slotImgFront" alt="">
             </div>
-            <!-- BACK shows the chosen slot after flip -->
+            <!-- BACK mirrored -->
             <div class="face back"><img id="slotImg" alt=""></div>
           </div>
         </div>
@@ -111,9 +109,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
-    let allSlots = [];           // {name, provider, image}
-    let providers = new Set();   // all provider names
-    let selected = new Set();    // selected providers
+    let allSlots = [];
+    let providers = new Set();
+    let selected = new Set();
 
     const els = {
       providers: document.getElementById('providers'),
@@ -131,15 +129,16 @@
       status: document.getElementById('status'),
     };
 
-    // Upscale imgix-style URLs so images are sharp
+    // Force all images to be sharp and fit
     function upscale(url){
       if(!url) return url;
       try{
         const u = new URL(url, location.href);
         if(u.hostname.includes('imgix')){
-          const p = u.searchParams;
-          if(p.has('w')) p.set('w','720');
-          if(p.has('h')) p.set('h','944'); // similar ratio to 180x236, but bigger
+          u.searchParams.set('w','720');
+          u.searchParams.set('h','944');
+          u.searchParams.set('fit','min');
+          u.searchParams.set('auto','format');
           return u.toString();
         }
       }catch(e){}
@@ -172,36 +171,31 @@
     function flipToFront(){ els.card.classList.remove('flipped'); }
 
     function showImages(url){
-      // Hide placeholder, show images on both faces (prevents mirrored front during flip)
       els.slotFrontPlaceholder.style.display = 'none';
       els.slotImgFront.style.display = 'block';
-      els.slotImgFront.src = url;   // front
-      els.slotImg.src = url;        // back
+      els.slotImgFront.src = url; // normal
+      els.slotImg.src = url;      // mirrored
     }
 
     function pickRandom() {
       const pool = byProvider();
-      if (!pool.length) { alert('No slots in current filter. Select some providers.'); return; }
+      if (!pool.length) { alert('No slots in current filter.'); return; }
       const choice = pool[Math.floor(Math.random() * pool.length)];
       const hi = upscale(choice.image);
 
       const pre = new Image();
       pre.onload = () => {
-        showImages(hi);                           // set both faces with the same orientation
-        els.slotImg.alt = choice.name;
+        showImages(hi);
         els.slotName.textContent = choice.name;
         els.slotProvider.textContent = choice.provider;
         flipToBack();
       };
       pre.onerror = () => {
-        els.slotImgFront.removeAttribute('src');
-        els.slotImg.removeAttribute('src');
         els.slotName.textContent = choice.name;
         els.slotProvider.textContent = `${choice.provider} (image unavailable)`;
         flipToBack();
       };
 
-      // Do a front flip first if we're already showing the back, so you don't see a mirrored frame
       if (els.card.classList.contains('flipped')) {
         flipToFront();
         setTimeout(() => pre.src = hi, 350);
@@ -210,7 +204,6 @@
       }
     }
 
-    // Load /slots.csv on page load
     async function loadCSV(){
       try{
         const res = await fetch('/slots.csv', {cache:'no-store'});
@@ -224,7 +217,7 @@
         })).filter(x => x.name && x.provider && x.image);
 
         providers = new Set(allSlots.map(s => s.provider));
-        selected = new Set(providers); // preselect all
+        selected = new Set(providers);
         renderProviders();
         els.status.textContent = `Loaded ${allSlots.length} slots`;
       }catch(err){
