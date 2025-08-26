@@ -39,11 +39,17 @@
     backface-visibility:hidden;-webkit-backface-visibility:hidden
   }
   .front{background:#151b2b;}
-  .back{background:#0f1322;}
+  .back{background:#0f1322;transform:rotateY(180deg)}
 
   #slotImgFront,#slotImgBack{
     max-width:100%;max-height:100%;object-fit:contain;
     border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.35)
+  }
+  #slotImgFront{
+    transform:scaleX(-1); /* mirrored on the front */
+  }
+  #slotImgBack{
+    transform:none;       /* normal on the back */
   }
 
   .meta{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -70,8 +76,9 @@
       <div class="panel card-wrap">
         <div class="card" id="card">
           <div class="card-inner">
-            <!-- Same image on both faces -->
+            <!-- FRONT = mirrored -->
             <div class="face front"><img id="slotImgFront" alt=""></div>
+            <!-- BACK = normal -->
             <div class="face back"><img id="slotImgBack" alt=""></div>
           </div>
         </div>
