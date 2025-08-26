@@ -24,7 +24,7 @@
 
   .card-wrap{display:grid;place-items:center;min-height:560px}
   .card{
-    width:360px; aspect-ratio:720/944; height:auto;           /* <<< match image aspect */
+    width:360px; aspect-ratio:720/944; height:auto;
     perspective:1200px; filter:drop-shadow(0 20px 40px rgba(0,0,0,.45));
   }
   .card-inner{
@@ -38,17 +38,15 @@
     position:absolute;inset:0;padding:12px;display:grid;place-items:center;
     backface-visibility:hidden;-webkit-backface-visibility:hidden
   }
-  .front{background:#151b2b}
-  .back{background:#0f1322;}
+  .front{background:#151b2b;}
+  .back{background:#0f1322;transform:rotateY(180deg)}
 
   #slotFrontPlaceholder{color:#b8c4ff;letter-spacing:1px;font-weight:800}
-  #slotImgFront,#slotImg{
+
+  #slotImg{
     max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;
     border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.35)
   }
-  #slotImgFront{display:none}
-  /* IMPORTANT: remove mirroring from back image; the 180deg face rotation already mirrors it */
-  /* (so the back appears mirrored, front appears normal) */
 
   .meta{display:flex;align-items:center;justify-content:space-between;gap:12px}
   .meta .title{font-size:22px;font-weight:800}
@@ -74,11 +72,14 @@
       <div class="panel card-wrap">
         <div class="card" id="card">
           <div class="card-inner">
-            <div class="face front">
+            <!-- BACK = placeholder -->
+            <div class="face back">
               <div id="slotFrontPlaceholder">Pick A Slot</div>
-              <img id="slotImgFront" alt="">
             </div>
-            <div class="face back"><img id="slotImg" alt=""></div>
+            <!-- FRONT = slot image -->
+            <div class="face front">
+              <img id="slotImg" alt="">
+            </div>
           </div>
         </div>
       </div>
@@ -107,7 +108,6 @@
       pickBtn:document.getElementById('pickBtn'),
       card:document.getElementById('card'),
       slotImg:document.getElementById('slotImg'),
-      slotImgFront:document.getElementById('slotImgFront'),
       slotFrontPlaceholder:document.getElementById('slotFrontPlaceholder'),
       slotName:document.getElementById('slotName'),
       slotProvider:document.getElementById('slotProvider'),
@@ -147,12 +147,12 @@
     }
     function flipToBack(){ els.card.classList.add('flipped'); }
     function flipToFront(){ els.card.classList.remove('flipped'); }
+
     function showImages(url){
       els.slotFrontPlaceholder.style.display='none';
-      els.slotImgFront.style.display='block';
-      els.slotImgFront.src=url;   // front (normal)
-      els.slotImg.src=url;        // back (will look mirrored due to rotateY(180) on the face)
+      els.slotImg.src=url;   // front = slot image
     }
+
     function pickRandom(){
       const pool=byProvider();
       if(!pool.length){ alert('No slots in current filter.'); return; }
